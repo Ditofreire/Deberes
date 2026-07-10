@@ -1,0 +1,2240 @@
+================================================================
+   CUADERNILLO: POLIMORFISMO Y MEMORIA EN JERARQUÃAS
+   Universidad San Francisco de Quito â€” USFQ
+   Curso: ProgramaciÃ³n Avanzada en C++
+
+   Instrucciones generales:
+   - Lee la teorÃ­a de cada secciÃ³n COMPLETA antes de resolver.
+   - Responde las preguntas de teorÃ­a A MANO antes de codificar.
+   - En ejercicios de TRAZA: dibuja el estado de memoria y la
+     vtable en cada paso antes de ejecutar.
+   - Entrega en GitHub: P001.cpp, P002.cpp ... M005.cpp
+
+   â˜… ENTREGA 1 â€” MARTES: Secciones 1â€“5 (P001â€“P013)
+   â˜… ENTREGA 2 â€” JUEVES: Secciones 6â€“7 (P014â€“M005)
+
+   Compilar:
+     g++ P001.cpp -o P001 && ./P001
+================================================================
+
+
+â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+â•‘  SECCIÃ“N 1 â€” POLIMORFISMO ESTÃTICO  (P001â€“P002)            â•‘
+â•‘  Sobrecarga Â· CompilaciÃ³n Â· Ya lo usabas sin saberlo       â•‘
+â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+TEORÃA â€” Lee esto ANTES de resolver los ejercicios
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+Â  ‰ ES POLIMORFISMO?
+----------------------
+Polimorfismo significa "muchas formas". En programaciÃ³n es
+la capacidad de tratar objetos o funciones de tipos distintos
+de manera uniforme a travÃ©s de una interfaz comÃºn.
+
+  AnalogÃ­a: el volante de un auto es polimÃ³rfico. No importa
+  si el auto es elÃ©ctrico, de gasolina o hÃ­brido â€” siempre
+  giras el volante de la misma forma y el auto responde.
+  El "cÃ³mo" cambia por debajo; la interfaz es la misma.
+
+EN C++ EXISTEN DOS TIPOS DE POLIMORFISMO:
+------------------------------------------
+
+  TIPO 1 â€” POLIMORFISMO ESTÃTICO (en tiempo de compilaciÃ³n):
+  El compilador decide quÃ© funciÃ³n llamar ANTES de ejecutar
+  el programa. Ya llevas semanas usÃ¡ndolo:
+
+    - Sobrecarga de funciones:
+        double area(double lado)              // cuadrado
+        double area(double base, double alt)  // rectÃ¡ngulo
+      El compilador ve cuÃ¡ntos argumentos pasas y elige.
+
+    - Sobrecarga de operadores:
+        cout << "hola"   // operator<< para string
+        cout << 42       // operator<< para int
+      Mismo operador, distinto comportamiento â€” resuelto
+      en compilaciÃ³n.
+
+  TIPO 2 â€” POLIMORFISMO DINÃMICO (en tiempo de ejecuciÃ³n):
+  El programa decide quÃ© funciÃ³n llamar MIENTRAS CORRE,
+  consultando la vtable del objeto real. Requiere virtual
+  y puntero o referencia a clase base.
+  Se explica en profundidad en la SecciÃ³n 3.
+
+  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+  â”‚  ESTÃTICO  â†’ compilador decide â†’ sobrecarga            â”‚
+  â”‚  DINÃMICO  â†’ programa decide  â†’ virtual + puntero      â”‚
+  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+
+Â¿CUÃNDO USAR CADA UNO?
+------------------------
+  EstÃ¡tico: cuando el tipo se conoce en tiempo de compilaciÃ³n.
+  DinÃ¡mico: cuando el tipo solo se conoce en ejecuciÃ³n
+            (ej: el usuario decide quÃ© tipo de objeto crear).
+
+VOCABULARIO CLAVE:
+------------------
+  Polimorfismo estÃ¡tico  â†’ resuelto en compilaciÃ³n
+  Polimorfismo dinÃ¡mico  â†’ resuelto en ejecuciÃ³n
+  Binding estÃ¡tico       â†’ el compilador elige la funciÃ³n
+  Binding dinÃ¡mico       â†’ el programa elige en ejecuciÃ³n
+  Sobrecarga             â†’ mismo nombre, distintas firmas
+
+ERRORES COMUNES:
+-----------------
+  1. Creer que polimorfismo = virtual. Virtual es solo
+     uno de los mecanismos de polimorfismo en C++.
+
+  2. Intentar sobrecargar por tipo de retorno:
+       int    calcular(int x)    { return x; }
+       double calcular(int x)    { return x; }  // ERROR
+     El compilador no puede distinguirlas â€” misma firma.
+     Mensaje: "cannot be overloaded with..."
+
+  3. Confundir sobrescritura (override) con sobrecarga:
+       Sobrecarga  â†’ mismo nombre, distinta firma, misma clase
+       Sobrescritura â†’ mismo nombre, misma firma, clase distinta
+
+EJEMPLO RESUELTO:
+-----------------
+  #include <iostream>
+  #include <iomanip>
+  #include <cmath>
+  using namespace std;
+
+  // Polimorfismo ESTÃTICO â€” el compilador elige en compilaciÃ³n
+  double calcularArea(double lado) {
+      return lado * lado;
+  }
+  double calcularArea(double base, double altura) {
+      return base * altura;
+  }
+  double calcularArea(double a, double b, double c) {
+      // FÃ³rmula de HerÃ³n para triÃ¡ngulo
+      double s = (a + b + c) / 2;
+      return sqrt(s * (s-a) * (s-b) * (s-c));
+  }
+
+  int main() {
+      cout << fixed << setprecision(2);
+      cout << calcularArea(5.0)        << endl;  // 25.00
+      cout << calcularArea(4.0, 3.0)   << endl;  // 12.00
+      cout << calcularArea(3.0,4.0,5.0)<< endl;  // 6.00
+      return 0;
+  }
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+PREGUNTAS DE TEORÃA â€” SecciÃ³n 1
+Responde A MANO antes de resolver los ejercicios.
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+T1.1 Â¿CuÃ¡l es la diferencia entre polimorfismo estÃ¡tico y
+     dinÃ¡mico? Â¿En quÃ© momento resuelve cada uno cuÃ¡l
+     funciÃ³n llamar?
+     
+     La diferencia entre polimorfismo estatico y dinamico es que en el polimorfismo estatico
+    es que definido en el compilador y el polimorfismo dinamico se "resuleve" en ejecucion.        
+
+T1.2 Â¿Por quÃ© el tipo de retorno no puede ser la Ãºnica
+     diferencia entre dos funciones sobrecargadas?
+
+    Porque si se tienen dos funciones con el mismo nombre y que poseen los mismos parametros, al momento de la compilacion
+    se elige una sin importar el tipo de dato de la funcion. Eso puede resultar en errores de return no deseado.
+    Resumen, una en sobrecarga de funciones se elige a la funcion a llamar mediante comparacion de argumentos y parametros.   
+
+T1.3 Â¿En quÃ© se diferencia sobrescritura (override) de
+     sobrecarga? Da un ejemplo de cada una.
+     
+     En la sobrecarga de funciones, lo que distingue una función de otra son sus parámetros, es decir, la cantidad, el tipo o el orden de los argumentos. 
+     En cambio, en la sobrescritura con `override`, la función de la clase hija debe tener el mismo nombre, el mismo tipo de retorno compatible y los mismos 
+     parámetros que la función virtual de la clase base. La diferencia es que, con polimorfismo dinámico, la versión que se ejecuta se decide en tiempo de ejecución 
+     según el tipo real del objeto.
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+EJERCICIOS â€” SecciÃ³n 1
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+----------------------------------------------------------------
+P001 | Reconocer polimorfismo estÃ¡tico
+Lee el siguiente cÃ³digo y responde las preguntas SIN ejecutarlo.
+
+  class Impresora {
+  public:
+      void imprimir(int n) {
+          cout << "Entero: " << n << endl;
+      }
+      void imprimir(double d) {
+          cout << "Double: " << d << endl;
+      }
+      void imprimir(string s) {
+          cout << "Texto: " << s << endl;
+      }
+      void imprimir(int a, int b) {
+          cout << "Suma: " << a + b << endl;
+      }
+      void imprimir(bool b) {
+          cout << "Suma: " << a + b << endl;
+      }
+  };
+
+  int main() {
+      Impresora imp;
+      imp.imprimir(42);
+      imp.imprimir(3.14);
+      imp.imprimir(string("hola"));  // nota: usa string() explÃ­cito
+                                     // "hola" solo es const char*
+                                     // y puede ser ambiguo con bool
+      imp.imprimir(3, 4);
+      return 0;
+  }
+
+a) Escribe la salida exacta del programa.
+
+Salida:
+    Entero: 42
+    Doble: 3.14
+    Texto: hola
+    Suma: 7
+
+b) Â¿CuÃ¡ntas versiones de imprimir() existen? Â¿QuÃ© las diferencia?
+
+    Existen 4 formar de imprimir() y la diferencia son los tipos de datos de los parametros 
+    y la cantidad de estos.
+
+c) Â¿En quÃ© momento decide el compilador cuÃ¡l versiÃ³n llamar
+   en cada lÃ­nea de main?
+
+    El compildar elige a que version llamar debido a los argumentos del main.
+    Sus tipos de datos y la cantidad.
+
+d) Agrega una quinta versiÃ³n: imprimir(bool b) que imprima
+   "Verdadero" o "Falso" segÃºn el valor. Escribe solo
+   la firma y el cuerpo del mÃ©todo nuevo.
+   NOTA: despuÃ©s de agregar imprimir(bool), Â¿por quÃ©
+   imp.imprimir("hola") sin string() serÃ­a ambiguo?
+   #include <iostream>
+#include <iomanip>
+#include <string>
+using namespace std;
+
+class Impresora {
+  public:
+      void imprimir(int n) {
+          cout << "Entero: " << n << endl;
+      }
+      void imprimir(double d) {
+          cout << "Double: " << d << endl;
+      }
+      void imprimir(string s) {
+          cout << "Texto: " << s << endl;
+      }
+      void imprimir(int a, int b) {
+          cout << "Suma: " << a + b << endl;
+      }
+      void imprimir(bool b) {
+          if (b){
+            cout<<"Verdadero"<<endl;
+          } else{
+            cout<<"Falso"<<endl;
+          }
+      }
+  };
+
+  int main() {
+      Impresora imp;
+      imp.imprimir(42);
+      imp.imprimir(3.14);
+      imp.imprimir(string("hola"));  // nota: usa string() explÃ­cito
+                                     // "hola" solo es const char*
+                                     // y puede ser ambiguo con bool
+      imp.imprimir(3, 4);
+      imp.imprimir(true);
+      return 0;
+  }
+  /*
+  Error de redundancia por definicion de string.
+  Un string es literalmente const char[5]
+  ¿Por qué puede convertirse a bool? Porque "hola" funciona como una dirección de memoria, o sea, como un puntero. Y un puntero que no es nullptr se puede convertir a true.
+  */
+----------------------------------------------------------------
+
+----------------------------------------------------------------
+P002 | TRAZA DOBLE â€” con y sin virtual
+RESUELVE A MANO. Este ejercicio muestra la diferencia central
+entre polimorfismo estÃ¡tico y dinÃ¡mico.
+
+  #include <iostream>
+  using namespace std;
+
+  class Forma {
+  public:
+      void dibujar() {   // SIN virtual
+          cout << "Forma::dibujar" << endl;
+      }
+  };
+
+  class Circulo : public Forma {
+  public:
+      void dibujar() {
+          cout << "Circulo::dibujar" << endl;
+      }
+  };
+
+  void probar(Forma* f) {
+      f->dibujar();
+  }
+
+  int main() {
+      Forma    fo;
+      Circulo  ci;
+
+      fo.dibujar();     // llamada 1
+      ci.dibujar();     // llamada 2
+      probar(&fo);      // llamada 3
+      probar(&ci);      // llamada 4
+      return 0;
+  }
+// caso2//////////////////////
+class Forma {
+  public:
+      virtual void dibujar() {   
+          cout << "Forma::dibujar" << endl;
+      }
+  };
+
+  class Circulo : public Forma {
+  public:
+      void dibujar() {
+          cout << "Circulo::dibujar" << endl;
+      }
+  };
+
+  void probar(Forma* f) {
+      f->dibujar();
+  }
+
+  int main() {
+      Forma    fo;
+      Circulo  ci;
+
+      fo.dibujar();     // llamada 1
+      ci.dibujar();     // llamada 2
+      probar(&fo);      // llamada 3
+      probar(&ci);      // llamada 4
+      return 0;
+  }
+a) Escribe la salida del programa TAL COMO ESTÃ (sin virtual). 
+   
+    Forma::dibujar
+    Circulo::dibujar
+    Forma::dibujar
+    Forma::dibujar
+
+b) Ahora agrega virtual antes de void dibujar() en Forma.
+   Â¿QuÃ© cambia en la salida? Â¿QuÃ© llamadas se ven afectadas
+   y cuÃ¡les no?
+
+La salida ahora es:
+    Forma::dibujar
+    Circulo::dibujar
+    Forma::dibujar
+    Circulo::dibujar
+
+    La llamada del la funcion al metodo se ve alterada/corregia por virtual, no pasa solo al metodo de forma porque el 
+    parametro lo indica, si no que campara para ver si el objeto es de forma(clase base/padre) o de Circulo(clase hija)
+    
+c) Explica por quÃ© la llamada 3 y la llamada 4 se comportan
+   distinto segÃºn si hay virtual o no.
+
+En la llamada 3:
+probar(&fo);
+
+se pasa la dirección de un objeto que realmente es de tipo Forma. Por eso, con o sin virtual, se ejecuta:
+
+Forma::dibujar
+
+En la llamada 4:
+
+probar(&ci);
+
+se pasa la dirección de un objeto que realmente es de tipo Circulo, pero el parámetro de la función es de tipo Forma*.
+
+Sin virtual, C++ usa el tipo del puntero, es decir Forma*, y por eso llama a:
+
+Forma::dibujar
+
+Con virtual, C++ usa el tipo real del objeto en ejecución. Como el objeto real es un Circulo, llama a:
+
+Circulo::dibujar
+
+
+d) Â¿QuÃ© tipo de binding usa cada versiÃ³n â€” estÃ¡tico o dinÃ¡mico?
+    
+    La primera es estatica y la segunda es dinamica.
+
+
+â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+â•‘  SECCIÃ“N 2 â€” EL PROBLEMA SIN POLIMORFISMO  (P003)          â•‘
+â•‘  El switch que crece Â· Por quÃ© virtual existe              â•‘
+â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+TEORÃA â€” Lee esto ANTES de resolver los ejercicios
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+EL PROBLEMA QUE RESUELVE EL POLIMORFISMO DINÃMICO:
+----------------------------------------------------
+Imagina que tienes un sistema con distintos tipos de animales.
+Sin polimorfismo dinÃ¡mico, para hacer que cada animal haga
+su sonido necesitas un switch o if/else que pregunta el tipo:
+
+  // SIN polimorfismo â€” frÃ¡gil:
+  for (int i = 0; i < n; i++) {
+      if (tipo[i] == "perro")  cout << "Guau" << endl;
+      else if (tipo[i] == "gato") cout << "Miau" << endl;
+      else if (tipo[i] == "vaca") cout << "Muuu" << endl;
+      // agregar un tipo nuevo = modificar ESTE cÃ³digo
+      // y todos los otros switch del programa
+  }
+
+  // CON polimorfismo dinÃ¡mico â€” extensible:
+  for (int i = 0; i < n; i++)
+      animales[i]->hacerSonido();
+      // agregar un tipo nuevo = solo agregar una clase nueva
+      // este cÃ³digo NO cambia nunca
+
+EL PRINCIPIO ABIERTO/CERRADO:
+-------------------------------
+Un buen diseÃ±o debe estar ABIERTO para extensiÃ³n (agregar
+tipos nuevos) pero CERRADO para modificaciÃ³n (sin tocar
+el cÃ³digo existente). El polimorfismo dinÃ¡mico hace posible
+ese principio.
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+EJERCICIOS â€” SecciÃ³n 2
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+----------------------------------------------------------------
+P003 | Reescribir un switch con polimorfismo
+Se te da el siguiente sistema SIN polimorfismo.
+Tu trabajo es reescribirlo CON polimorfismo dinÃ¡mico.
+
+  // VERSIÃ“N SIN polimorfismo â€” NO modifiques esto,
+  // solo lÃ©elo para entender quÃ© hace:
+  #include <iostream>
+  using namespace std;
+
+  void emitirSonido(string tipo) {
+      if (tipo == "perro")  cout << "Guau!"  << endl;
+      else if (tipo == "gato")  cout << "Miau!"  << endl;
+      else if (tipo == "vaca")  cout << "Muuu!"  << endl;
+      else cout << "Sonido desconocido." << endl;
+  }
+
+  int main() {
+      string animales[] = {"perro","gato","vaca","perro"};
+      for (int i = 0; i < 4; i++)
+          emitirSonido(animales[i]);
+      return 0;
+  }
+
+Implementa la versiÃ³n CON polimorfismo:
+  - Clase base Animal con virtual void hacerSonido()
+  - Clases Perro, Gato, Vaca con override
+  - main con arreglo Animal* de 4 elementos con la misma
+    secuencia original (perro, gato, vaca, perro)
+  - Misma salida que el original
+  - Agrega la clase Pato con hacerSonido() â†’ "Cuac!" pero
+    NO la agregues al arreglo del main â€” el objetivo es
+    demostrar que el cÃ³digo existente NO necesita cambiar
+    para que el nuevo tipo exista y funcione
+
+#include <iostream>
+#include <iomanip>
+#include <string>
+using namespace std;
+
+class Animal {
+    public:
+    virtual void hacerSonido () {
+        cout<<"Sonido desconocido"<<endl;
+    }
+ };
+class Perro: public Animal{
+    public:
+    void hacerSonido () override {
+        cout<<"Guao Guao"<<endl;
+    }
+};
+class Vaca: public Animal{
+    public:
+    void hacerSonido () override {
+        cout<<"Muuuuuuuuuuu"<<endl;
+    }
+};
+class Gato: public Animal{
+    public:
+    void hacerSonido () override {
+        cout<<"Miao"<<endl;
+    }
+};
+
+class Pato: public Animal{
+    public:
+    void hacerSonido () override {
+        cout<<"Cuac!"<<endl;
+    }
+};
+int main() {
+    \\\\\\\\\\HEAP\\\\\\\\\\\\
+      Animal * Sonido[4];
+     Sonido[0]= new Perro;
+     Sonido[1]= new Gato;
+     Sonido[2]= new Vaca;
+     Sonido[3]= new Perro;
+
+     for(int i=0; i<4;i++){
+        Sonido[i]->hacerSonido();
+        delete Sonido[i];
+        Sonido[i]=nullptr;
+     }
+  \\\\\\\\\\\\\STACK\\\\\\\\\\\\\\\\
+    Perro p1;
+    Gato g1;
+    Vaca v1;
+    Perro p2;
+
+    Animal* Sonido[4];\\\Upcasting
+
+    Sonido[0] = &p1;
+    Sonido[1] = &g1;
+    Sonido[2] = &v1;
+    Sonido[3] = &p2;
+  
+for (int i = 0; i < 4; i++) {
+    Sonido[i]->hacerSonido();
+}
+return 0;  
+}
+
+Salida esperada (misma que el original):
+  Guau!
+  Miau!
+  Muuu!
+  Guau!
+
+Responde tambiÃ©n:
+  Â¿QuÃ© tendrÃ­as que modificar en la versiÃ³n SIN polimorfismo
+
+    Tendria que modificar a la funcion con otro condicional, ejmplo: else if (tipo=="pato") cout << "Cuac!"  << endl;
+    
+    El problema es que, si hay muchos animales o personajes, la función tendría que comprobar cada caso hasta encontrar el indicado(puede ser tardado o no.).
+    Entonces el código se vuelve más largo, más difícil de mantener y más propenso a errores,
+
+    PD: Me recuerda a undertale (tiene cada else if por frase que existe en el juego. La condion de esas cosas debe ser enorme.).
+
+  para agregar el Pato? Â¿Y en tu versiÃ³n CON polimorfismo?
+  Â¿Por quÃ© la clase Pato puede existir sin tocar el main?
+    
+    Gracias al polimorfismo, la clase Pato puede agregarse sin cambiar la logica del 
+    main porque hereda de la clase base (Animal) y sobrescribe el metodo con virtual.
+
+    El main no necesita saber exactamente cuantas clases existen, solo necesita a la clase base y con eso,
+    punteros y vaselina (Polimorfismo), se llama al metodo virtual correcto segun el objeto real. 
+    
+    Por eso, el hecho de agragar pato no altera nada porque el main se comunica con el mensajero(clase base).
+    Este mensajero recibe la carta, mira cuál es el destinatario real, es decir, el objeto concreto, y entrega el mensaje 
+    al método que corresponde. Así, si el objeto es un Perro, se ejecuta el método de Perro; si es un Gato, el de Gato; y si 
+    es un Pato, el de Pato.
+
+â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+â•‘  SECCIÃ“N 3 â€” POLIMORFISMO DINÃMICO  (P004â€“P008)            â•‘
+â•‘  virtual Â· vtable Â· Slicing Â· Referencia Â· Errores         â•‘
+â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+TEORÃA â€” Lee esto ANTES de resolver los ejercicios
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+##UPCASTING - SUBIR EN LA JERARQUIA#########
+
+El upcasting consiste en convertir un puntero o referencia de una clase derivada en un puntero o referencia de la clase base.
+
+Es implicito, no necesita cast manual, y es seguro, porque todo objeto de la clase derivada tambien es un objeto de la clase base.
+
+Ejemplo:
+
+
+Perro p("Rex");
+
+Animal* a = &p;   // upcasting implicito: Perro* -> Animal*
+
+
+En este caso, p es un Perro, pero tambien puede tratarse como un Animal.
+
+Luego:
+
+a->hacerSonido();
+
+Si hacerSonido() esta declarado como virtual en la clase base Animal, entonces C++ llama al metodo correcto segun el tipo real del objeto:
+
+Perro::hacerSonido()
+
+Pero si hacerSonido() no es virtual, entonces C++ usa el tipo del puntero, es decir Animal*, y llama a:
+
+Animal::hacerSonido()
+
+Por eso, para que exista polimorfismo dinamico, se necesita:
+
+
+virtual
++
+puntero o referencia a la clase base
+
+
+## COMO FUNCIONA VIRTUAL INTERNAMENTE - LA VTABLE
+
+Cuando una clase tiene al menos un metodo virtual, normalmente el compilador crea una tabla de funciones virtuales, llamada vtable.
+
+Ademas, cada objeto de esa clase suele tener un puntero oculto llamado vptr, que apunta a la vtable correspondiente a su tipo real.
+
+Ejemplo conceptual:
+
+
+Objeto Perro:                  vtable de Perro:
+
++-------------------+          +----------------------------------+
+| vptr ------------ |--------> | hacerSonido -> Perro::hacerSonido |
++-------------------+          | imprimir    -> Perro::imprimir    |
+| nombre = "Rex"    |          +----------------------------------+
+| raza = "Labrador" |
++-------------------+
+
+
+Cuando haces:
+
+Animal* a = new Perro("Rex");
+a->hacerSonido();
+
+ocurre algo parecido a esto:
+
+1. El programa ve que a es un puntero a Animal.
+2. Como hacerSonido() es virtual, no decide la funcion solo por el tipo del puntero.
+3. Lee el vptr del objeto real.
+4. Entra a la vtable del objeto real.
+5. Encuentra que debe llamar a Perro::hacerSonido().
+6. Ejecuta el metodo correcto.
+
+Todo esto ocurre en tiempo de ejecucion, por eso se llama binding dinamico.
+
+Nota: la vtable y el vptr son una forma comun de implementar virtual, aunque el estandar de C++ no obliga a que internamente se haga exactamente asi.
+
+## SLICING - EL ERROR SILENCIOSO##################
+
+El slicing ocurre cuando copias un objeto derivado por valor dentro de una variable de tipo base.
+
+En ese caso, se pierde la parte especifica de la clase derivada.
+
+Ejemplo:
+
+Perro p("Rex");
+
+Animal a = p;   // slicing
+
+Aqui p es un Perro, pero a es solamente un Animal.
+
+La parte de Perro se corta y se pierde en la copia.
+
+Diagrama conceptual:
+
+Objeto original Perro p:
+
++-------------------+
+| parte Animal      |
+| nombre = "Rex"    |
++-------------------+
+| parte Perro       |
+| raza = "Labrador" |
++-------------------+
+
+Objeto Animal a despues de copiar:
++-------------------+
+| parte Animal      |
+| nombre = "Rex"    |
++-------------------+
+La parte Perro se perdio.
+
+Entonces, si haces:
+
+a.hacerSonido();
+
+se llamara al metodo de Animal, no al de Perro.
+
+Incluso si el metodo es virtual, ya no importa, porque el objeto a ya no es un Perro. Ahora es solamente un Animal.
+
+Por eso, esta funcion produce slicing:
+
+void hacerHablar(Animal a) {
+    a.hacerSonido();
+}
+
+Aunque le pases un Perro:
+
+Perro p("Rex");
+hacerHablar(p);
+
+
+la funcion recibe una copia de tipo Animal, asi que se pierde la parte de Perro.
+
+Regla importante:
+El polimorfismo dinamico debe hacerse con punteros o referencias,
+no pasando objetos por valor.
+
+## POLIMORFISMO POR REFERENCIA###################
+
+No siempre necesitas usar new, delete o heap para tener polimorfismo dinamico.
+Tambien puedes usar referencias.
+Ejemplo:
+
+void hacerHablar(Animal& a) {
+    a.hacerSonido();
+}
+
+Luego:
+
+Perro p("Rex");
+
+hacerHablar(p);
+
+
+Aqui p vive en el stack, no en el heap.
+
+Pero como la funcion recibe una referencia a Animal, ocurre upcasting:
+
+```
+Perro -> Animal&
+```
+
+Y si hacerSonido() es virtual, C++ llama correctamente a:
+
+```
+Perro::hacerSonido()
+```
+
+Esta version evita slicing y tambien evita tener que usar new y delete.
+
+## POLIMORFISMO CON PUNTEROS EN EL STACK#######################
+
+Tambien puedes tener objetos en el stack y guardar sus direcciones en punteros de tipo base.
+Ejemplo:
+```
+Perro p1("Rex");
+Gato g1("Michi");
+Vaca v1("Lola");
+
+Animal* animales[3];
+
+animales[0] = &p1;
+animales[1] = &g1;
+animales[2] = &v1;
+
+for (int i = 0; i < 3; i++) {
+    animales[i]->hacerSonido();
+}
+```
+Aqui los objetos reales estan en el stack:
+```
+p1
+g1
+v1
+```
+Pero el arreglo guarda punteros de tipo:
+```
+Animal*
+```
+Entonces ocurre upcasting:
+```
+Perro* -> Animal*
+Gato*  -> Animal*
+Vaca*  -> Animal*
+```
+Y gracias al metodo virtual, se ejecuta el metodo correcto para cada objeto.
+
+Importante: como no se uso new, no se debe usar delete.
+
+Incorrecto:
+```
+delete animales[i];   // MAL si los objetos estan en el stack
+```
+Correcto:
+```
+// No se hace delete.
+// Los objetos se destruyen automaticamente al salir del scope.
+```
+
+## POLIMORFISMO CON PUNTEROS EN EL HEAP############
+
+Tambien puedes crear los objetos en el heap usando new.
+Ejemplo:
+```
+Animal* animales[4];
+
+animales[0] = new Perro("Rex");
+animales[1] = new Gato("Michi");
+animales[2] = new Vaca("Lola");
+animales[3] = new Perro("Firulais");
+
+for (int i = 0; i < 4; i++) {
+    animales[i]->hacerSonido();
+}
+```
+Como aqui si se uso new, entonces despues hay que liberar memoria con delete:
+```
+for (int i = 0; i < 4; i++) {
+    delete animales[i];
+    animales[i] = nullptr;
+}
+```
+
+En este caso:
+```
+El arreglo de punteros puede estar en el stack.
+Los objetos reales estan en el heap.
+```
+## DESTRUCTOR VIRTUAL########################
+Si una clase base se usa de forma polimorfica y sus objetos derivados pueden ser 
+destruidos mediante un puntero a la clase base, entonces el destructor de la clase 
+base debe ser virtual.
+Ejemplo problematico:
+```
+class Animal {
+public:
+    virtual void hacerSonido() {
+        cout << "Sonido generico" << endl;
+    }
+
+    ~Animal() {
+        cout << "Destructor de Animal" << endl;
+    }
+};
+
+class Perro : public Animal {
+public:
+    ~Perro() {
+        cout << "Destructor de Perro" << endl;
+    }
+};
+```
+Luego:
+
+```
+Animal* a = new Perro();
+
+delete a;
+```
+El problema es que a es de tipo Animal*.
+Si el destructor de Animal no es virtual, al hacer delete a, el comportamiento 
+puede ser incorrecto. Puede que no se llame bien al destructor de Perro.
+La forma correcta es:
+
+```
+class Animal {
+public:
+    virtual void hacerSonido() {
+        cout << "Sonido generico" << endl;
+    }
+
+    virtual ~Animal() {
+        cout << "Destructor de Animal" << endl;
+    }
+};
+```
+Ahora, si haces:
+```
+Animal* a = new Perro();
+
+delete a;
+```
+se llama correctamente en este orden:
+```
+~Perro()
+~Animal()
+```
+Esto es importante porque si Perro reserva memoria, abre archivos o usa recursos 
+internos, su destructor debe ejecutarse correctamente.
+Regla practica:
+```
+Si una clase base tiene metodos virtuales, casi siempre debe tener 
+destructor virtual.
+```
+## ERRORES COMUNES EN POLIMORFISMO
+1. Olvidar virtual en el destructor de la clase base.
+Ejemplo:
+```
+Animal* a = new Perro();
+
+delete a;   // peligroso si ~Animal no es virtual
+```
+Esto puede causar destruccion incorrecta del objeto.
+
+2. Intentar crear un objeto de una clase abstracta.
+Una clase abstracta es una clase que tiene al menos un metodo virtual puro.
+Ejemplo:
+```
+class Animal {
+public:
+    virtual void hacerSonido() = 0;
+};
+```
+Esta clase no se puede instanciar directamente:
+```
+Animal a;                // error
+Animal* a = new Animal;  // error
+```
+Porque Animal es incompleta como objeto concreto. Sirve como base para otras clases.
+
+3. Usar override cuando el metodo no existe en la clase base.
+Ejemplo incorrecto:
+
+```
+class Animal {
+public:
+    virtual void hacerSonido() {}
+};
+
+class Perro : public Animal {
+public:
+    void hacerSonidoAnimal() override {
+        cout << "Guau" << endl;
+    }
+};
+```
+Esto da error, porque hacerSonidoAnimal() 
+no esta sobrescribiendo ningun metodo de Animal.
+La forma correcta seria:
+```
+class Perro : public Animal {
+public:
+    void hacerSonido() override {
+        cout << "Guau" << endl;
+    }
+};
+```
+override es util porque permite que el compilador revise si realmente estas 
+sobrescribiendo un metodo virtual de la clase base.
+
+4. Pasar objetos por valor y causar slicing.
+Incorrecto:
+```
+void hacerHablar(Animal a) {
+    a.hacerSonido();
+}
+```
+Correcto con referencia:
+```
+void hacerHablar(Animal& a) {
+    a.hacerSonido();
+}
+```
+Correcto con puntero:
+```
+void hacerHablar(Animal* a) {
+    a->hacerSonido();
+}
+```
+## RESUMEN GENERAL
+Upcasting:
+Perro* -> Animal*
+Seguro y automatico.
+
+Downcasting:
+Animal* -> Perro*
+Mas delicado. No siempre es seguro.
+
+Polimorfismo dinamico:
+Requiere metodos virtuales y uso de punteros o referencias.
+
+Sin virtual:
+C++ decide el metodo segun el tipo del puntero o variable.
+
+Con virtual:
+C++ decide el metodo segun el tipo real del objeto en ejecucion.
+
+Slicing:
+Ocurre cuando copias un objeto derivado en una variable de tipo base.
+Se pierde la parte derivada.
+
+Destructor virtual:
+Necesario cuando vas a borrar objetos derivados usando punteros a la clase base.
+
+
+EJEMPLO RESUELTO:
+-----------------
+  #include <iostream>
+  using namespace std;
+
+  class Vehiculo {
+  public:
+      string marca;
+      Vehiculo(string m) : marca(m) {}
+      virtual void arrancar() {
+          cout << marca << ": vroom generico" << endl;
+      }
+      virtual ~Vehiculo() {}
+  };
+
+  class Auto : public Vehiculo {
+  public:
+      Auto(string m) : Vehiculo(m) {}
+      void arrancar() override {
+          cout << marca << ": vroom de auto" << endl;
+      }
+  };
+
+  class Moto : public Vehiculo {
+  public:
+      Moto(string m) : Vehiculo(m) {}
+      void arrancar() override {
+          cout << marca << ": vroom de moto" << endl;
+      }
+  };
+
+  void probar(Vehiculo* v) {   // puntero â†’ polimÃ³rfico
+      v->arrancar();
+  }
+
+  int main() {
+      Vehiculo* flota[3];
+      flota[0] = new Auto("Toyota");
+      flota[1] = new Moto("Honda");
+      flota[2] = new Auto("Ford");
+
+      for (int i = 0; i < 3; i++) probar(flota[i]);
+
+      for (int i = 0; i < 3; i++) {
+          delete flota[i];
+          flota[i] = nullptr;
+      }
+      return 0;
+  }
+
+  Salida:
+    Toyota: vroom de auto
+    Honda: vroom de moto
+    Ford: vroom de auto
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+PREGUNTAS DE TEORÃA â€” SecciÃ³n 3
+Responde A MANO antes de resolver los ejercicios.
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+T3.1 Â¿QuÃ© es upcasting? Â¿Es seguro siempre? Â¿Por quÃ©?
+
+     Upcasting es cuando se convierte un puntero/referencia de clase hija a un puntero/referencia
+     de clase padre. Por ejemplo, si Perro hereda de Animal, entonces un Perro* puede convertirse 
+     automáticamente en un Animal*.
+
+     Esto es seguro porque todo objeto de clase hija contiene parte de la clase padre.Es decir,
+     todo perro es un animal.
+
+     Sin embargo, el upcasting no garantiza por si solo que se llame el metodo de la clase hija.
+     Para eso se necestia un metodo en la base se virtual. Si si es virtual, C++ decide en tiempo
+     de ejecuacion que metodo llamar segun el tipo real del onjeto usando mecanismos de la vtable. Si ni es virtual
+     usa el tipo del puntero y llama al metodo de la clase padre.
+
+T3.2 Â¿QuÃ© es slicing? Â¿Por quÃ© no produce error de compilaciÃ³n?
+     Â¿CÃ³mo se evita?
+
+     Como ya se menciono en la respuesta de arriba. Todo objeto de clase hija tiene su parte
+     de la clase padre, por lo que se puede pasar de hija a padre. Sin embargo, no se puede pasar
+     asi por que si. Este se debe pasar por punteros/referencias, en caso de no ser usadas estas formas
+     y pasar por valor se genera a lo que llamamos slicing. En el slicing le pasamos por valor, pero por que es de
+     hija a padre, solo se pasa la parte que el objeto heredo de la clase base. Por lo que si se busca usar un metodo,
+     solo se usara el objeto de la clase padre.
+
+     objeto hija:                 objeto padre:
+     nombre:"PPP" ////heredada    nombre:"PPP"
+     raza:"golden"
+     
+     Teniendo en cuenta la representacion de arriba, se puede ver que no produce 
+     error de compilación porque para C++ es una conversión válida: está copiando 
+     la parte base de un objeto derivado. El problema es lógico, no sintáctico.
+    
+T3.3 Â¿Por quÃ© el polimorfismo dinÃ¡mico requiere puntero o
+     referencia y nunca funciona por valor?
+     
+     Como ya se menciono en la respuesta de arriba. Todo objeto de clase hija tiene su parte
+     de la clase padre, por lo que se puede pasar de hija a padre. Sin embargo, no se puede pasar
+     asi por que si. Este se debe pasar por punteros/referencias, en caso de no ser usadas estas formas
+     y pasar por valor se genera a lo que llamamos slicing. En el slicing le pasamos por valor, pero por que es de
+     hija a padre, solo se pasa la parte que el objeto heredo de la clase base. Por lo que si se busca usar un metodo,
+     solo se usara el objeto de la clase padre.
+
+T3.4 Â¿QuÃ© es la vtable? Â¿QuÃ© objeto la tiene y cuÃ¡ndo
+     se consulta?
+     
+     La vtable es una tabla creada por el compilador que guarda las 
+     direcciones de las funciones virtuales de una clase. Cada clase con
+    métodos virtuales tiene su propia vtable, mientras que cada objeto 
+    posee un puntero oculto hacia ella. Esta tabla se consulta en tiempo 
+    de ejecución cuando se llama a una función virtual mediante un 
+    puntero o referencia a la clase base. Así, C++ ejecuta la versión 
+    correspondiente al tipo real del objeto.
+
+T3.5 Â¿Por quÃ© el destructor de la clase base debe ser virtual
+     cuando usas polimorfismo con punteros?
+     El destructor de la clase base debe ser virtual para que, al borrar un objeto 
+     hijo mediante un puntero de la clase padre, se ejecuten ambos destructores.
+    Sin `virtual`, solo se llamaría al destructor de la clase base y podrían quedar 
+    recursos de la clase hija sin liberar. Esto puede causar fugas de memoria o comportamiento 
+    indefinido.
+
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+EJERCICIOS â€” SecciÃ³n 3
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+----------------------------------------------------------------
+P004 | Upcasting implÃ­cito
+Implementa la jerarquÃ­a:
+  Empleado      (base): nombre, salario,
+                        virtual double calcularPago() = 0
+                        (abstracta â€” no puede instanciarse sola)
+  EmpleadoTC    (hija): calcula salario mensual completo
+  EmpleadoFL    (hija): recibe horas trabajadas y tarifa por hora,
+                        calcula pago = horas * tarifa
+
+Escribe una funciÃ³n libre:
+  void mostrarPago(Empleado* e)
+  â†’ imprime nombre y el resultado de calcularPago()
+
+En main crea un Empleado* apuntando a cada tipo y llama
+mostrarPago() â€” demuestra que funciona con los dos tipos.
+
+Salida esperada (con tus propios valores):
+  Ana [TC]: $3500.00
+  Luis [FL]: $1200.00
+----------------------------------------------------------------
+
+----------------------------------------------------------------
+P005 | TRAZA â€” Slicing, el error silencioso
+RESUELVE A MANO. No ejecutes hasta haber respondido.
+
+  #include <iostream>
+  using namespace std;
+
+  class Figura {
+  public:
+      virtual string nombre() const { return "Figura"; }
+      void describir() const { cout << nombre() << endl; }
+  };
+
+  class Rectangulo : public Figura {
+  public:
+      string nombre() const override { return "Rectangulo"; }
+  };
+
+  void porValor(Figura f) {          // por VALOR
+      f.describir();
+  }
+
+  void porPuntero(Figura* f) {       // por PUNTERO
+      f->describir();
+  }
+
+  void porReferencia(Figura& f) {    // por REFERENCIA
+      f.describir();
+  }
+
+  int main() {
+      Rectangulo r;
+      porValor(r);       // lÃ­nea 1
+      porPuntero(&r);    // lÃ­nea 2
+      porReferencia(r);  // lÃ­nea 3
+      return 0;
+  }
+
+a) Escribe la salida de cada lÃ­nea SIN ejecutar.
+   LÃ­nea 1: _______  LÃ­nea 2: _______  LÃ­nea 3: _______
+
+b) Â¿En cuÃ¡l(es) lÃ­neas ocurre slicing? Â¿Por quÃ©?
+
+c) Â¿CuÃ¡l es la diferencia entre lÃ­nea 2 y lÃ­nea 3?
+   Â¿CuÃ¡ndo preferirÃ­as usar referencia sobre puntero?
+
+d) Modifica la llamada de lÃ­nea 1 para que NO produzca
+   slicing. Escribe la nueva firma de porValor().
+----------------------------------------------------------------
+
+----------------------------------------------------------------
+P006 | Polimorfismo por referencia
+Implementa la jerarquÃ­a:
+  Instrumento (base): virtual void tocar()
+                      virtual ~Instrumento() {}
+  Guitarra (hija): tocar() imprime "TaÃ±e las cuerdas"
+  Piano    (hija): tocar() imprime "Presiona las teclas"
+  Bateria  (hija): tocar() imprime "Golpea los parches"
+
+Escribe DOS funciones libres:
+  void concierto(Instrumento* i)   // versiÃ³n por puntero
+  void concierto(Instrumento& i)   // versiÃ³n por referencia
+
+En main demuestra ambas versiones con los tres instrumentos.
+Para la versiÃ³n por referencia crea los objetos en STACK
+(sin new/delete).
+
+Salida esperada:
+  [puntero]    TaÃ±e las cuerdas
+  [puntero]    Presiona las teclas
+  [puntero]    Golpea los parches
+  [referencia] TaÃ±e las cuerdas
+  [referencia] Presiona las teclas
+  [referencia] Golpea los parches
+----------------------------------------------------------------
+
+----------------------------------------------------------------
+P007 | Arreglo polimÃ³rfico
+Implementa la jerarquÃ­a:
+  Figura (base abstracta):
+    virtual double area() = 0
+    virtual double perimetro() = 0
+    virtual void imprimir() const = 0
+    virtual ~Figura() {}
+
+  Circulo    (hija): radio
+  Cuadrado   (hija): lado
+  TrianguloR (hija): triÃ¡ngulo RECTÃNGULO con cateto1, cateto2,
+                     hipotenusa (usa PitÃ¡goras para hipotenusa
+                     o pÃ­dela como parÃ¡metro)
+                     area = cateto1 * cateto2 / 2
+                     perimetro = cateto1 + cateto2 + hipotenusa
+
+En main crea un arreglo Figura* de 5 elementos con distintos
+tipos. Recorre el arreglo una sola vez e imprime el Ã¡rea y
+perÃ­metro de cada figura. Libera la memoria correctamente.
+
+Salida esperada (con tus propios valores):
+  Circulo    : area=78.54  perim=31.42
+  Cuadrado   : area=25.00  perim=20.00
+  TrianguloR : area=6.00   perim=12.00
+  Circulo    : area=12.57  perim=12.57
+  Cuadrado   : area=9.00   perim=12.00
+----------------------------------------------------------------
+
+----------------------------------------------------------------
+P008 | ANÃLISIS â€” Errores comunes con mensajes de compilador
+Para cada fragmento: indica si compila, si el error es en
+compilaciÃ³n o en ejecuciÃ³n, y escribe la correcciÃ³n.
+
+  // Fragmento A:
+  class Animal {
+  public:
+      virtual void hablar() = 0;
+  };
+  int main() {
+      Animal a;
+      a.hablar();
+  }
+
+  // Fragmento B:
+  class Animal {
+  public:
+      virtual void hablar() { cout << "..."; }
+  };
+  class Perro : public Animal {
+  public:
+      void habla() override { cout << "Guau"; }  // typo
+  };
+
+  // Fragmento C:
+  class Animal {
+  public:
+      void hablar() { cout << "Animal"; }
+      ~Animal() {}   // NO virtual
+  };
+  class Perro : public Animal {
+  private:
+      int* datos;
+  public:
+      Perro()  { datos = new int[100]; }
+      ~Perro() { delete[] datos; }
+  };
+  int main() {
+      Animal* a = new Perro();
+      delete a;  // Â¿quÃ© pasa?
+  }
+
+  // Fragmento D:
+  class Figura {
+  public:
+      virtual double area() = 0;
+  };
+  class Circulo : public Figura {
+      double radio;
+  public:
+      Circulo(double r) : radio(r) {}
+      // olvidÃ³ implementar area()
+  };
+  int main() {
+      Circulo c(5.0);
+  }
+
+  Fragmento A: ___________________________________________
+  CorrecciÃ³n A: __________________________________________
+
+  Fragmento B: ___________________________________________
+  CorrecciÃ³n B: __________________________________________
+
+  Fragmento C: ___________________________________________
+  CorrecciÃ³n C: __________________________________________
+
+  Fragmento D: ___________________________________________
+  CorrecciÃ³n D: __________________________________________
+----------------------------------------------------------------
+
+
+â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+â•‘  SECCIÃ“N 4 â€” UPCASTING Y DOWNCASTING  (P009â€“P011)         â•‘
+â•‘  Subir Â· Bajar Â· dynamic_cast Â· RTTI Â· nullptr             â•‘
+â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+TEORÃA â€” Lee esto ANTES de resolver los ejercicios
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+UPCASTING â€” subir en la jerarquÃ­a:
+------------------------------------
+  Perro p("Rex");
+  Animal* a = &p;    // Perro â†’ Animal (sube)
+
+  - ImplÃ­cito: no necesitas escribir ningÃºn cast
+  - Siempre seguro: todo Perro ES un Animal
+  - QuÃ© se pierde: a travÃ©s de a solo puedes acceder a
+    lo que Animal expone â€” los mÃ©todos propios de Perro
+    no son accesibles via a (a menos que sean virtuales)
+
+DOWNCASTING â€” bajar en la jerarquÃ­a:
+--------------------------------------
+  Animal* a = new Perro("Rex");
+  Perro* p = dynamic_cast<Perro*>(a);  // Animal â†’ Perro (baja)
+
+  - ExplÃ­cito: debes escribir dynamic_cast<Tipo*>()
+  - Riesgoso: no siempre funciona â€” depende del tipo real
+  - Si el objeto real NO es un Perro â†’ retorna nullptr
+  - Debes verificar nullptr antes de usar el puntero
+
+  SIEMPRE verifica el resultado:
+  if (p != nullptr) {
+      p->ladrar();   // seguro â€” sabemos que es un Perro
+  } else {
+      cout << "No es un Perro." << endl;
+  }
+
+Â¿QUÃ‰ ES RTTI?
+--------------
+RTTI (Run-Time Type Information) es el mecanismo que permite
+a C++ conocer el tipo real de un objeto en ejecuciÃ³n.
+Sin RTTI, dynamic_cast no puede funcionar.
+
+  - EstÃ¡ activo por defecto en g++
+  - Requiere que la clase base tenga AL MENOS UN mÃ©todo
+    virtual (si no hay ninguno, dynamic_cast no compila)
+  - typeid(objeto) retorna informaciÃ³n del tipo real:
+      cout << typeid(*a).name() << endl;  // imprime "Perro" (aprox)
+
+UPCASTING vs DOWNCASTING â€” cuÃ¡ndo usar cada uno:
+--------------------------------------------------
+  Upcasting  â†’ cuando quieres tratar distintos tipos de forma
+               uniforme (polimorfismo) â€” el caso mÃ¡s comÃºn
+  Downcasting â†’ cuando necesitas acceder a funcionalidad
+               especÃ­fica de una clase derivada que no estÃ¡
+               en la interfaz de la base
+
+  El downcasting frecuente es seÃ±al de diseÃ±o pobre â€”
+  si necesitas bajar constantemente, probablemente falta
+  un mÃ©todo virtual en la clase base.
+
+EJEMPLO RESUELTO:
+-----------------
+  #include <iostream>
+  using namespace std;
+
+  class Animal {
+  public:
+      string nombre;
+      Animal(string n) : nombre(n) {}
+      virtual void hablar() = 0;
+      virtual ~Animal() {}
+  };
+
+  class Perro : public Animal {
+  public:
+      Perro(string n) : Animal(n) {}
+      void hablar() override { cout << nombre << ": Guau!" << endl; }
+      void buscarPelota() { cout << nombre << " busca la pelota." << endl; }
+  };
+
+  class Gato : public Animal {
+  public:
+      Gato(string n) : Animal(n) {}
+      void hablar() override { cout << nombre << ": Miau!" << endl; }
+      void ronronear() { cout << nombre << " ronronea." << endl; }
+  };
+
+  int main() {
+      Animal* animales[2];
+      animales[0] = new Perro("Rex");   // upcasting implÃ­cito
+      animales[1] = new Gato("Luna");
+
+      for (int i = 0; i < 2; i++)
+          animales[i]->hablar();         // polimorfismo
+
+      // Downcasting seguro:
+      Perro* p = dynamic_cast<Perro*>(animales[0]);
+      if (p != nullptr) p->buscarPelota();
+
+      Perro* q = dynamic_cast<Perro*>(animales[1]); // Gato â†’ Perro
+      if (q != nullptr) q->buscarPelota();
+      else cout << "No es un Perro." << endl;
+
+      for (int i = 0; i < 2; i++) { delete animales[i]; animales[i] = nullptr; }
+      return 0;
+  }
+
+  Salida:
+    Rex: Guau!
+    Luna: Miau!
+    Rex busca la pelota.
+    No es un Perro.
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+PREGUNTAS DE TEORÃA â€” SecciÃ³n 4
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+T4.1 Â¿CuÃ¡l es la diferencia entre upcasting y downcasting?
+     Â¿CuÃ¡l es seguro siempre y cuÃ¡l no? Â¿Por quÃ©?
+     ___________________________________________________
+     ___________________________________________________
+
+T4.2 Â¿QuÃ© retorna dynamic_cast cuando el cast falla?
+     Â¿QuÃ© ocurrirÃ­a si no verificas ese valor?
+     ___________________________________________________
+     ___________________________________________________
+
+T4.3 Â¿QuÃ© es RTTI? Â¿QuÃ© condiciÃ³n debe cumplir la clase
+     base para que dynamic_cast funcione?
+     ___________________________________________________
+     ___________________________________________________
+
+T4.4 Â¿Por quÃ© el downcasting frecuente es seÃ±al de diseÃ±o
+     pobre? Â¿QuÃ© soluciÃ³n de diseÃ±o lo evitarÃ­a?
+     ___________________________________________________
+     ___________________________________________________
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+EJERCICIOS â€” SecciÃ³n 4
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+----------------------------------------------------------------
+P009 | Upcasting â€” quÃ© se pierde y quÃ© se conserva
+Implementa:
+  Vehiculo (base): marca, virtual void describir()
+                   (NOTA: describir() DEBE ser virtual para
+                   que el inciso c) demuestre polimorfismo)
+  Auto  (hija):    puertas, void abrirMaletero()
+  Camion (hija):   toneladas, void cargarMercancia()
+
+En main:
+a) Crea un Auto* y llama describir() y abrirMaletero().
+b) Haz upcasting a Vehiculo* y llama describir().
+   Â¿Puedes llamar abrirMaletero() a travÃ©s de Vehiculo*?
+   Intenta hacerlo y anota el mensaje del compilador.
+c) Crea un arreglo Vehiculo* con un Auto y un Camion.
+   Llama describir() en ambos â€” Â¿a cuÃ¡l implementaciÃ³n
+   llega cada llamada?
+
+Documenta en comentarios dentro del cÃ³digo quÃ© accesible
+y quÃ© no a travÃ©s del puntero base.
+----------------------------------------------------------------
+
+----------------------------------------------------------------
+P010 | Downcasting seguro con dynamic_cast
+Implementa la jerarquÃ­a:
+  Empleado    (base): nombre, virtual void trabajar()
+  Programador (hija): lenguaje, void escribirCodigo()
+  Disenador   (hija): herramienta, void crearMockup()
+  Gerente     (hija): departamento â€” solo tiene trabajar()
+                      heredado, sin mÃ©todo propio adicional
+
+Escribe la funciÃ³n:
+  void asignarTarea(Empleado* e)
+  â†’ intenta downcast a Programador â€” si funciona: escribirCodigo()
+  â†’ intenta downcast a Disenador  â€” si funciona: crearMockup()
+  â†’ si ninguno funciona: imprime "Tarea generica."
+    (el Gerente caerÃ¡ aquÃ­ porque no tiene mÃ©todo propio)
+
+En main crea un arreglo Empleado* con un Programador,
+un Disenador y un Gerente, y llama asignarTarea() en cada uno.
+
+Salida esperada:
+  [Nombre] escribe codigo en [lenguaje]
+  [Nombre] crea mockup en [herramienta]
+  Tarea generica.
+----------------------------------------------------------------
+
+----------------------------------------------------------------
+P011 | TRAZA â€” cuÃ¡ndo dynamic_cast retorna nullptr
+RESUELVE A MANO primero. Dibuja la jerarquÃ­a y predice
+cada resultado antes de ejecutar.
+
+  #include <iostream>
+  using namespace std;
+
+  class A {
+  public:
+      virtual ~A() {}
+  };
+  class B : public A {};
+  class C : public A {};
+  class D : public B {};
+
+  int main() {
+      A* a1 = new B();
+      A* a2 = new C();
+      A* a3 = new D();
+
+      B* b1 = dynamic_cast<B*>(a1);  // caso 1
+      B* b2 = dynamic_cast<B*>(a2);  // caso 2
+      B* b3 = dynamic_cast<B*>(a3);  // caso 3
+      D* d1 = dynamic_cast<D*>(a3);  // caso 4
+      C* c1 = dynamic_cast<C*>(a3);  // caso 5
+
+      cout << (b1 ? "OK" : "null") << endl;  // lÃ­nea 1
+      cout << (b2 ? "OK" : "null") << endl;  // lÃ­nea 2
+      cout << (b3 ? "OK" : "null") << endl;  // lÃ­nea 3
+      cout << (d1 ? "OK" : "null") << endl;  // lÃ­nea 4
+      cout << (c1 ? "OK" : "null") << endl;  // lÃ­nea 5
+
+      delete a1; a1 = nullptr;
+      delete a2; a2 = nullptr;
+      delete a3; a3 = nullptr;
+      return 0;
+  }
+
+a) Dibuja el Ã¡rbol de herencia (A, B, C, D).
+b) Predice el resultado de cada caso (OK o null) y justifica.
+   Caso 1: ___  Caso 2: ___  Caso 3: ___
+   Caso 4: ___  Caso 5: ___
+c) Â¿Por quÃ© el caso 3 funciona aunque a3 fue declarado
+   como A* y D hereda de B, no directamente de A?
+----------------------------------------------------------------
+
+
+â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+â•‘  SECCIÃ“N 5 â€” INTERFAZ VS IMPLEMENTACIÃ“N  (P012â€“P013)       â•‘
+â•‘  Clase abstracta Â· override Â· final Â· Base::metodo()       â•‘
+â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+TEORÃA â€” Lee esto ANTES de resolver los ejercicios
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+INTERFAZ vs IMPLEMENTACIÃ“N:
+-----------------------------
+Una clase abstracta puede usarse como INTERFAZ â€” define
+QUÃ‰ debe hacer algo sin definir CÃ“MO lo hace.
+
+  class Serializable {             // interfaz â€” el contrato
+  public:
+      virtual string serializar() = 0;   // quÃ© debe hacer
+      virtual void deserializar(string) = 0;
+      virtual ~Serializable() {}
+  };
+
+  class Usuario : public Serializable {  // implementaciÃ³n â€” el cÃ³mo
+  public:
+      string serializar() override { return nombre + "," + email; }
+      void deserializar(string s) override { /* parsea s */ }
+  };
+
+  La interfaz define el contrato. Cualquier clase que
+  implemente Serializable puede usarse de forma uniforme
+  sin importar cÃ³mo serializa internamente.
+
+override Y final:
+------------------
+  override: le dice al compilador "este mÃ©todo debe existir
+            en la clase base". Si no existe, da error.
+            Protege de typos y de cambios en la base.
+
+  final:    impide que una clase sea heredada, o que un
+            mÃ©todo sea sobrescrito.
+
+    class Circulo final : public Figura { };  // no se puede heredar
+    void area() override final { }            // no se puede sobrescribir
+
+LLAMAR AL MÃ‰TODO DEL PADRE DESDE LA HIJA â€” Base::metodo():
+-------------------------------------------------------------
+A veces la hija quiere EXTENDER el comportamiento del padre,
+no reemplazarlo. Usa Base::metodo() para llamar la versiÃ³n
+del padre primero y luego agregar el comportamiento propio:
+
+  class Animal {
+  public:
+      virtual void describir() {
+          cout << "Soy un animal." << endl;
+      }
+  };
+
+  class Perro : public Animal {
+  public:
+      void describir() override {
+          Animal::describir();              // llama al padre primero
+          cout << "Soy un perro." << endl;  // agrega comportamiento
+      }
+  };
+
+  // Perro::describir() imprime:
+  //   Soy un animal.
+  //   Soy un perro.
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+PREGUNTAS DE TEORÃA â€” SecciÃ³n 5
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+T5.1 Â¿CuÃ¡l es la diferencia entre una clase abstracta usada
+     como interfaz y una clase base normal?
+     ___________________________________________________
+     ___________________________________________________
+
+T5.2 Â¿QuÃ© garantiza override que no garantiza simplemente
+     redefinir el mÃ©todo sin esa palabra?
+     ___________________________________________________
+
+T5.3 Â¿CuÃ¡ndo usarÃ­as Base::metodo() en lugar de simplemente
+     sobrescribir el mÃ©todo completamente?
+     ___________________________________________________
+     ___________________________________________________
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+EJERCICIOS â€” SecciÃ³n 5
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+----------------------------------------------------------------
+P012 | DiseÃ±ar una interfaz desde un enunciado
+Se te da el siguiente enunciado de dominio:
+
+  "Un sistema de pagos debe poder procesar distintos medios:
+   tarjeta de crÃ©dito, transferencia bancaria y pago en
+   efectivo. Todos deben poder procesar un monto, verificar
+   si el pago fue exitoso, e imprimir un comprobante."
+
+a) DiseÃ±a la clase abstracta MedioPago con los mÃ©todos
+   virtuales puros que representan ese contrato.
+b) Implementa las tres clases concretas.
+c) En main crea un arreglo MedioPago* con los tres tipos
+   y llama los tres mÃ©todos en cada uno.
+d) Â¿QuÃ© ventaja da tener MedioPago como interfaz si maÃ±ana
+   se agrega un cuarto medio (criptomoneda)?
+
+Salida esperada (con tus propios mensajes):
+  [Tarjeta] Procesando $150.00... Aprobado.
+  Comprobante: TC-****1234 $150.00
+  [Transferencia] Procesando $500.00... Aprobado.
+  Comprobante: TR-001 $500.00
+  [Efectivo] Procesando $20.00... Aprobado.
+  Comprobante: EF-001 $20.00
+----------------------------------------------------------------
+
+----------------------------------------------------------------
+P013 | Extender con Base::metodo()
+Implementa la jerarquÃ­a de un sistema de logging:
+
+  Logger (base):
+    virtual void log(string mensaje)
+    â†’ imprime: [LOG] mensaje
+
+  LoggerFecha (hija de Logger):
+    void log(string mensaje) override
+    â†’ llama Logger::log(mensaje) primero
+    â†’ luego imprime: [FECHA] 2024-01-01
+
+  LoggerCompleto (hija de LoggerFecha):
+    void log(string mensaje) override
+    â†’ llama LoggerFecha::log(mensaje) primero
+    â†’ luego imprime: [NIVEL] INFO
+
+En main crea los tres tipos y llama log("Sistema iniciado")
+en cada uno. Observa cÃ³mo cada nivel agrega informaciÃ³n
+sin reemplazar la del nivel anterior.
+
+Salida esperada:
+  -- Logger base:
+  [LOG] Sistema iniciado
+
+  -- LoggerFecha:
+  [LOG] Sistema iniciado
+  [FECHA] 2024-01-01
+
+  -- LoggerCompleto:
+  [LOG] Sistema iniciado
+  [FECHA] 2024-01-01
+  [NIVEL] INFO
+----------------------------------------------------------------
+
+
+â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+â•‘  SECCIÃ“N 6 â€” INTEGRACIÃ“N  (P014â€“P015)                      â•‘
+â•‘  Sistema completo Â· AnÃ¡lisis crÃ­tico                       â•‘
+â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+EJERCICIOS â€” SecciÃ³n 6
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+----------------------------------------------------------------
+P014 | Sistema completo con arreglo polimÃ³rfico
+Implementa un sistema de tienda de mascotas con menÃº.
+
+JerarquÃ­a:
+  Mascota (base abstracta):
+    string nombre, double precio
+    virtual string tipo() = 0
+    virtual string sonido() = 0
+    virtual void describir() const   // tiene implementaciÃ³n por defecto:
+      â†’ imprime: [tipo()] nombre - $precio - sonido()
+      Las hijas pueden sobrescribirla o usar la de Mascota
+    virtual ~Mascota() {}
+
+  Perro  (hija): raza
+  Gato   (hija): colorOjos
+  Conejo (hija): pesoKg
+
+Sistema:
+  - Arreglo dinÃ¡mico Mascota* de capacidad 10
+  - MenÃº con opciones:
+      1. Agregar mascota (el usuario elige tipo)
+      2. Listar todas las mascotas
+      3. Buscar por tipo (downcasting con dynamic_cast)
+      4. Salir
+  - Al salir: liberar toda la memoria correctamente
+
+Salida esperada (ejemplo):
+  === TIENDA DE MASCOTAS ===
+  1. Agregar  2. Listar  3. Buscar  4. Salir
+  > 1
+  Tipo (perro/gato/conejo): perro
+  Nombre: Rex  Raza: Labrador  Precio: 350.00
+  > 2
+  [Perro] Rex (Labrador) - $350.00 - Guau!
+  > 3
+  Buscar tipo: gato
+  No hay mascotas de ese tipo.
+  > 4
+  Hasta luego. Memoria liberada.
+----------------------------------------------------------------
+
+----------------------------------------------------------------
+P015 | AnÃ¡lisis crÃ­tico con preguntas guÃ­a
+Lee el siguiente sistema y responde las preguntas.
+NO lo modifiques â€” solo analiza y responde por escrito.
+
+  class Notificacion {
+  public:
+      string mensaje;
+      Notificacion(string m) : mensaje(m) {}
+      void enviar() {
+          cout << "Enviando: " << mensaje << endl;
+      }
+  };
+
+  class NotificacionEmail : public Notificacion {
+  public:
+      string email;
+      NotificacionEmail(string m, string e)
+          : Notificacion(m), email(e) {}
+      void enviar() {
+          cout << "Email a " << email << ": " << mensaje << endl;
+      }
+  };
+
+  class NotificacionSMS : public Notificacion {
+  public:
+      string telefono;
+      NotificacionSMS(string m, string t)
+          : Notificacion(m), telefono(t) {}
+      void enviar() {
+          cout << "SMS a " << telefono << ": " << mensaje << endl;
+      }
+  };
+
+  void enviarTodas(Notificacion** lista, int n) {
+      for (int i = 0; i < n; i++)
+          lista[i]->enviar();
+  }
+
+a) Â¿Funciona enviarTodas() correctamente con los tres tipos?
+   Â¿Por quÃ© sÃ­ o por quÃ© no? Â¿QuÃ© imprime exactamente?
+
+b) Â¿QuÃ© cambio de UNA PALABRA harÃ­a que enviarTodas()
+   funcione polimÃ³rficamente? Â¿DÃ³nde exactamente?
+
+c) Si agregas un nuevo tipo NotificacionPush, Â¿necesitas
+   modificar enviarTodas()? Â¿Por quÃ©?
+
+d) El destructor de Notificacion no es virtual. Â¿QuÃ©
+   problema produce si haces delete en un Notificacion*
+   que apunta a un NotificacionEmail?
+
+e) Si alguien llama enviarTodas() asÃ­:
+     NotificacionEmail e("Hola", "x@x.com");
+     Notificacion* lista[1] = {&e};
+     enviarTodas(lista, 1);
+   Â¿Ocurre slicing? Â¿Por quÃ©?
+
+================================================================
+  continÃºa en SecciÃ³n 7 â†’
+================================================================
+
+
+â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+â•‘  SECCIÃ“N 7 â€” MEMORIA DINÃMICA EN JERARQUÃAS  (M001â€“M005)  â•‘
+â•‘  Heap en herencia Â· Destructor por nivel Â· Redimensionar   â•‘
+â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+
+  ENTREGA:
+  â˜… Secciones 1â€“5 (P001â€“P013): martes
+  â˜… Secciones 6â€“7 (P014â€“M005): jueves
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+TEORÃA â€” Lee esto ANTES de resolver los ejercicios
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+MEMORIA DINÃMICA EN JERARQUÃAS DE CLASES:
+------------------------------------------
+Cuando una clase base tiene memoria dinÃ¡mica propia Y una
+clase derivada tambiÃ©n agrega su propia memoria, cada nivel
+de la jerarquÃ­a es responsable de liberar SOLO su parte.
+
+  class Base {
+  private:
+      int* datosBase;
+  public:
+      Base(int n) { datosBase = new int[n]; }
+      virtual ~Base() {
+          delete[] datosBase;    // Base libera SU memoria
+          datosBase = nullptr;
+      }
+  };
+
+  class Hija : public Base {
+  private:
+      double* datosHija;        // memoria PROPIA de Hija
+  public:
+      Hija(int n, int m) : Base(n) {
+          datosHija = new double[m];
+      }
+      ~Hija() {
+          delete[] datosHija;   // Hija libera SU memoria
+          datosHija = nullptr;
+          // ~Base() se llama automÃ¡ticamente despuÃ©s
+      }
+  };
+
+ORDEN DE DESTRUCTORES EN JERARQUÃA:
+-------------------------------------
+El orden es SIEMPRE el inverso de la construcciÃ³n:
+  1. Se construye Base primero
+  2. Se construye Hija despuÃ©s
+
+  Al destruir:
+  1. ~Hija() primero  â†’ libera datosHija
+  2. ~Base() despuÃ©s  â†’ libera datosBase
+
+  Si el destructor de Base NO es virtual y tienes:
+    Base* b = new Hija(3, 5);
+    delete b;
+  â†’ solo se llama ~Base() â†’ datosHija NUNCA se libera â†’ LEAK
+
+  Por eso el destructor virtual es OBLIGATORIO cuando la
+  clase base o sus derivadas tienen memoria dinÃ¡mica propia.
+
+CLASE CONTENEDORA CON ARREGLO POLIMÃ“RFICO:
+--------------------------------------------
+Una clase puede gestionar internamente un arreglo de
+punteros a clase base â€” esto es el patrÃ³n central del
+proyecto grupal:
+
+  class Coleccion {
+  private:
+      Animal** animales;   // arreglo de punteros en heap
+      int capacidad;
+      int cantidad;
+  public:
+      Coleccion(int cap) : capacidad(cap), cantidad(0) {
+          animales = new Animal*[capacidad];
+      }
+      ~Coleccion() {
+          for (int i = 0; i < cantidad; i++) {
+              delete animales[i];      // libera cada objeto
+              animales[i] = nullptr;
+          }
+          delete[] animales;           // libera el arreglo
+          animales = nullptr;
+      }
+      void agregar(Animal* a) {
+          if (cantidad < capacidad)
+              animales[cantidad++] = a;
+      }
+  };
+
+  NOTA CRÃTICA: el destructor de Animal DEBE ser virtual.
+  Si no lo es, delete animales[i] solo llama ~Animal y
+  nunca el destructor de la clase derivada real.
+
+REDIMENSIONAR UN ARREGLO DINÃMICO DENTRO DE UNA CLASE:
+--------------------------------------------------------
+Cuando el arreglo se llena, se puede crear uno mÃ¡s grande,
+copiar los datos y liberar el original:
+
+  void expandir() {
+      int nuevaCap = capacidad * 2;
+      Animal** nuevo = new Animal*[nuevaCap];
+      for (int i = 0; i < cantidad; i++)
+          nuevo[i] = animales[i];   // copia punteros, no objetos
+      delete[] animales;            // libera el arreglo viejo
+      animales = nuevo;             // apunta al nuevo
+      capacidad = nuevaCap;
+      // NO hay delete[] nuevo â€” es el arreglo actual ahora
+  }
+
+  CUIDADO: solo se copian los punteros, no los objetos.
+  Los objetos en heap siguen en el mismo lugar â€” solo
+  el arreglo que los referencia cambiÃ³ de tamaÃ±o.
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+PREGUNTAS DE TEORÃA â€” SecciÃ³n 7
+Responde A MANO antes de resolver los ejercicios.
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+T7.1 Cuando una clase derivada tiene su propia memoria
+     dinÃ¡mica, Â¿quiÃ©n libera la memoria de la base y
+     quiÃ©n libera la de la derivada? Â¿En quÃ© orden?
+     ___________________________________________________
+     ___________________________________________________
+
+T7.2 Si el destructor de la clase base NO es virtual y
+     haces delete por un puntero a base que apunta a un
+     objeto derivado, Â¿quÃ© destructor(es) se llaman?
+     Â¿QuÃ© consecuencia tiene si la derivada tiene new propio?
+     ___________________________________________________
+     ___________________________________________________
+
+T7.3 En el mÃ©todo expandir(), Â¿por quÃ© se hace
+     delete[] animales pero NO delete[] nuevo?
+     ___________________________________________________
+     ___________________________________________________
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+EJERCICIOS â€” SecciÃ³n 7
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+----------------------------------------------------------------
+M001 | Memoria dinÃ¡mica en base y derivada
+Implementa la siguiente jerarquÃ­a donde CADA nivel tiene
+su propia memoria dinÃ¡mica:
+
+  Sensor (base):
+    private: double* lecturas (arreglo dinÃ¡mico), int n
+    Constructor(int n): reserva n doubles con new
+    virtual ~Sensor(): libera lecturas con delete[], nullptr
+    virtual void imprimir() const = 0
+    virtual string tipo() const = 0
+
+  SensorTemperatura (hija de Sensor):
+    private: string* etiquetas (arreglo dinÃ¡mico de strings)
+    Constructor(int n): llama a Sensor(n), reserva n strings
+                        con new, inicializa todas en ""
+    ~SensorTemperatura(): libera etiquetas, nullptr
+                          (Sensor::~Sensor se llama despuÃ©s)
+    void setLectura(int i, double val): asigna val en lecturas[i]
+    void setEtiqueta(int i, string e):  asigna e en etiquetas[i]
+    string tipo() const override: retorna "Temperatura"
+    void imprimir() const override: imprime cada etiqueta
+                                    con su lectura formateada
+
+En main:
+  SensorTemperatura st(3);
+  st.setLectura(0, 22.5); st.setEtiqueta(0, "Sala");
+  st.setLectura(1, 18.0); st.setEtiqueta(1, "Cocina");
+  st.setLectura(2, 25.3); st.setEtiqueta(2, "Patio");
+
+  Sensor* s = &st;
+  s->imprimir();
+  cout << "Tipo: " << s->tipo() << endl;
+  // st sale de scope â†’ ~SensorTemperatura â†’ ~Sensor
+
+  NOTA: puedes diseÃ±ar los mÃ©todos setLectura() y setEtiqueta()
+  con la firma que prefieras â€” lo importante es demostrar
+  que imprimir() muestra cada lectura con su etiqueta y que
+  los destructores se llaman en el orden correcto al salir
+  de scope.
+
+Agrega mensajes en cada destructor para verificar el orden:
+  ~SensorTemperatura: liberando etiquetas
+  ~Sensor: liberando lecturas
+
+Salida esperada:
+  Sala: 22.50
+  Cocina: 18.00
+  Patio: 25.30
+  Tipo: Temperatura
+  ~SensorTemperatura: liberando etiquetas
+  ~Sensor: liberando lecturas
+----------------------------------------------------------------
+
+----------------------------------------------------------------
+M002 | TRAZA â€” orden de destructores en jerarquÃ­a con heap
+RESUELVE A MANO. Dibuja el estado del heap en cada paso
+y predice la salida COMPLETA antes de ejecutar.
+
+  #include <iostream>
+  using namespace std;
+
+  class A {
+  private:
+      int* datos;
+  public:
+      A()  { datos = new int[5];
+             cout << "A construido" << endl; }
+      virtual ~A() {
+          delete[] datos; datos = nullptr;
+          cout << "~A destruido" << endl;
+      }
+  };
+
+  class B : public A {
+  private:
+      double* vals;
+  public:
+      B()  : A() { vals = new double[3];
+                   cout << "B construido" << endl; }
+      ~B() {
+          delete[] vals; vals = nullptr;
+          cout << "~B destruido" << endl;
+      }
+  };
+
+  class C : public B {
+  private:
+      char* buf;
+  public:
+      C()  : B() { buf = new char[10];
+                   cout << "C construido" << endl; }
+      ~C() {
+          delete[] buf; buf = nullptr;
+          cout << "~C destruido" << endl;
+      }
+  };
+
+  int main() {
+      A* obj = new C();   // upcasting a A*
+      cout << "---" << endl;
+      delete obj;
+      return 0;
+  }
+
+a) Escribe la salida COMPLETA en orden, incluyendo "---".
+b) Dibuja el estado del heap antes del delete:
+   Â¿quÃ© bloques de memoria existen y quiÃ©n los referencia?
+c) Â¿QuÃ© pasarÃ­a si ~A() NO fuera virtual?
+   Â¿CuÃ¡ntos destructores se llamarÃ­an? Â¿QuÃ© memoria quedarÃ­a
+   sin liberar?
+d) Â¿En quÃ© orden se construyÃ³ y en quÃ© orden se destruyÃ³?
+   Â¿Se cumple siempre LIFO? Â¿Por quÃ©?
+----------------------------------------------------------------
+
+----------------------------------------------------------------
+M003 | Redimensionar arreglo dinÃ¡mico dentro de una clase
+Implementa la clase Playlist que gestiona canciones y
+se expande automÃ¡ticamente cuando se llena:
+
+  class Cancion {
+  public:
+      string titulo;
+      string artista;
+      Cancion(string t, string a) : titulo(t), artista(a) {}
+  };
+
+  class Playlist {
+  private:
+      Cancion** canciones;   // arreglo dinÃ¡mico de punteros
+      int capacidad;
+      int cantidad;
+
+      void expandir():
+        â†’ duplica la capacidad
+        â†’ crea nuevo arreglo con new
+        â†’ copia los punteros (no los objetos)
+        â†’ libera el arreglo viejo con delete[]
+        â†’ actualiza capacidad
+        â†’ imprime "Playlist expandida a [nueva cap]"
+
+  public:
+      Playlist(int capInicial): reserva arreglo, cantidad = 0
+      ~Playlist(): libera cada Cancion y luego el arreglo
+      void agregar(string titulo, string artista):
+        â†’ si cantidad == capacidad: llama expandir() PRIMERO
+          (expande antes de agregar â€” no despuÃ©s)
+        â†’ luego crea new Cancion y agrega al final
+      void imprimir() const:
+        â†’ imprime nÃºmero y tÃ­tulo de cada canciÃ³n
+  };
+
+En main:
+  Crea una Playlist de capacidad 2.
+  Agrega 5 canciones â€” la tercera y quinta deben forzar
+  una expansiÃ³n.
+  Imprime la playlist al final.
+
+Salida esperada:
+  Playlist expandida a 4
+  Playlist expandida a 8
+  1. [titulo1] - [artista1]
+  2. [titulo2] - [artista2]
+  3. [titulo3] - [artista3]
+  4. [titulo4] - [artista4]
+  5. [titulo5] - [artista5]
+----------------------------------------------------------------
+
+----------------------------------------------------------------
+M004 | Clase contenedora con arreglo polimÃ³rfico
+Implementa un zoolÃ³gico que gestiona distintos tipos de
+animales internamente con memoria dinÃ¡mica.
+
+  Animal (base abstracta):
+    string nombre
+    Animal(string n) : nombre(n) {}   // constructor con nombre
+    virtual string sonido() = 0
+    virtual string especie() = 0
+    virtual void describir() const
+    virtual ~Animal() {}
+
+  Leon  (hija): Leon(string n) : Animal(n) {}
+                sonido="Roar",  especie="Felino"
+  Aguila (hija): Aguila(string n) : Animal(n) {}
+                sonido="Squak", especie="Ave"
+  Serpiente (hija): Serpiente(string n) : Animal(n) {}
+                    sonido="Ssss", especie="Reptil"
+
+  class Zoologico {
+  private:
+      Animal** animales;
+      int capacidad;
+      int cantidad;
+  public:
+      Zoologico(int cap): reserva arreglo, cantidad=0
+      ~Zoologico(): libera cada animal y el arreglo
+      void agregar(Animal* a): agrega si hay espacio
+      void listar() const: llama describir() en cada uno
+      int contarEspecie(string esp) const:
+        â†’ cuenta cuÃ¡ntos animales tienen esa especie
+  };
+
+En main:
+  Zoologico zoo(5);
+  zoo.agregar(new Leon("Simba"));
+  zoo.agregar(new Aguila("Zeus"));
+  zoo.agregar(new Leon("Nala"));
+  zoo.agregar(new Serpiente("Kaa"));
+
+  zoo.listar();
+  cout << "Felinos: " << zoo.contarEspecie("Felino") << endl;
+
+  // zoo sale de scope â†’ ~Zoologico libera todo
+
+Salida esperada:
+  [Felino] Simba dice: Roar
+  [Ave]    Zeus dice: Squak
+  [Felino] Nala dice: Roar
+  [Reptil] Kaa dice: Ssss
+  Felinos: 2
+----------------------------------------------------------------
+
+----------------------------------------------------------------
+M005 | ANÃLISIS â€” detectar leaks en jerarquÃ­a
+Lee el siguiente cÃ³digo. Tiene TRES problemas de memoria.
+Identifica cada uno, explica por quÃ© ocurre y corrÃ­gelo.
+
+  #include <iostream>
+  using namespace std;
+
+  class Figura {
+  protected:
+      double* coords;
+  public:
+      Figura(int n) { coords = new double[n]; }
+      ~Figura() {                    // â† PROBLEMA A estÃ¡ aquÃ­
+          delete[] coords;           //   (pista: mira la firma
+          coords = nullptr;          //    del destructor)
+      }
+  };
+
+  class FiguraColor : public Figura {
+      int* paleta;
+  public:
+      FiguraColor(int n, int c) : Figura(n) {
+          paleta = new int[c];
+      }
+      ~FiguraColor() {
+          delete[] paleta;
+          paleta = nullptr;
+      }
+  };
+
+  class Canvas {
+      Figura** figuras;
+      int cantidad;
+  public:
+      Canvas() : cantidad(0) {
+          figuras = new Figura*[10];
+      }
+      void agregar(Figura* f) {
+          figuras[cantidad++] = f;
+      }
+      ~Canvas() {                    // problema B
+          delete[] figuras;
+      }
+  };
+
+  int main() {
+      Canvas c;
+      c.agregar(new FiguraColor(4, 3));
+      c.agregar(new FiguraColor(6, 5));
+      // problema C estÃ¡ aquÃ­
+      Figura* f = new FiguraColor(2, 2);
+      f = new FiguraColor(8, 4);
+      delete f;
+      return 0;
+  }
+
+  Problema A â€” dÃ³nde: __________________________
+  QuÃ© ocurre: ___________________________________
+  CorrecciÃ³n: ___________________________________
+
+  Problema B â€” dÃ³nde: __________________________
+  QuÃ© ocurre: ___________________________________
+  CorrecciÃ³n: ___________________________________
+
+  Problema C â€” dÃ³nde: __________________________
+  QuÃ© ocurre: ___________________________________
+  CorrecciÃ³n: ___________________________________
+----------------------------------------------------------------
+
+================================================================
+FIN â€” 20 EJERCICIOS: 15 POLIMORFISMO + 5 MEMORIA EN JERARQUÃAS
+Entrega 1 (martes): Secciones 1â€“5 (P001â€“P013)
+Entrega 2 (jueves): Secciones 6â€“7 (P014â€“M005)
+USFQ â€” ProgramaciÃ³n Avanzada en C++
+================================================================
